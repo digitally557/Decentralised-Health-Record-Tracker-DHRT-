@@ -149,7 +149,7 @@ Open an issue with:
 - Expected vs actual behavior
 - Screenshots if applicable
 
-Security vulnerabilities should be reported privately to [security@yourproject.com](mailto:security@yourproject.com).
+Security vulnerabilities should be reported privately to [digitally557](mailto:digitally557@gmail.com).
 
 ## 📄 License
 
@@ -164,6 +164,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Built with ❤️ by developers who believe your data should be yours.**
+**Built by developers who believe your data should be yours.**
 
 *Star this repo if you believe in a future where patients control their own health data!* ⭐
