@@ -7,7 +7,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
 
-A revolutionary healthcare platform that puts patients back in control of their medical records. Built on the Stacks blockchain with military-grade encryption, this app ensures your health data is truly yours—secure, private, and accessible only to those you trust.
+A revolutionary healthcare platform that puts patients back in control of their medical records. Built on the Stacks blockchain with military-grade encryption, this app ensures your health data is truly yours. Secure, private, and accessible only to those you trust.
 
 ## ✨ Why This Matters
 
