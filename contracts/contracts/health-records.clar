@@ -10,6 +10,7 @@
 
 ;; Define data variables
 (define-data-var record-counter uint u0)
+(define-data-var emergency-access-enabled bool true)
 
 ;; Define data maps
 (define-map health-records
@@ -32,6 +33,26 @@
 (define-map user-records
   { owner: principal, record-id: uint }
   { exists: bool }
+)
+
+(define-map emergency-contacts
+  { user: principal, contact: principal }
+  { 
+    contact-type: (string-ascii 20),
+    relationship: (string-ascii 50),
+    can-access-all: bool,
+    added-at: uint,
+    is-active: bool
+  }
+)
+
+(define-map emergency-access-log
+  { record-id: uint, emergency-contact: principal, access-time: uint }
+  { 
+    record-owner: principal,
+    access-reason: (string-ascii 200),
+    is-valid: bool
+  }
 )
 
 ;; Read-only functions
@@ -58,6 +79,30 @@
 
 (define-read-only (get-record-count)
   (var-get record-counter)
+)
+
+(define-read-only (get-emergency-contact (user principal) (contact principal))
+  (map-get? emergency-contacts { user: user, contact: contact })
+)
+
+(define-read-only (is-emergency-contact (user principal) (contact principal))
+  (match (get-emergency-contact user contact)
+    emergency-info (get is-active emergency-info)
+    false
+  )
+)
+
+(define-read-only (can-emergency-access (record-id uint) (emergency-contact principal))
+  (let ((record (unwrap! (get-record record-id) false)))
+    (and 
+      (var-get emergency-access-enabled)
+      (is-emergency-contact (get owner record) emergency-contact)
+    )
+  )
+)
+
+(define-read-only (get-emergency-access-log (record-id uint) (emergency-contact principal) (access-time uint))
+  (map-get? emergency-access-log { record-id: record-id, emergency-contact: emergency-contact, access-time: access-time })
 )
 
 ;; Public functions
@@ -121,5 +166,56 @@
       (merge record { is-active: false })
     )
     (ok true)
+  )
+)
+
+;; Emergency Access Functions
+(define-public (add-emergency-contact (contact principal) (contact-type (string-ascii 20)) (relationship (string-ascii 50)) (can-access-all bool))
+  (let ((existing-contact (get-emergency-contact tx-sender contact)))
+    (asserts! (is-none existing-contact) err-already-exists)
+    (map-set emergency-contacts
+      { user: tx-sender, contact: contact }
+      {
+        contact-type: contact-type,
+        relationship: relationship,
+        can-access-all: can-access-all,
+        added-at: block-height,
+        is-active: true
+      }
+    )
+    (ok true)
+  )
+)
+
+(define-public (remove-emergency-contact (contact principal))
+  (let ((existing-contact (unwrap! (get-emergency-contact tx-sender contact) err-record-not-found)))
+    (map-set emergency-contacts
+      { user: tx-sender, contact: contact }
+      (merge existing-contact { is-active: false })
+    )
+    (ok true)
+  )
+)
+
+(define-public (emergency-access-record (record-id uint) (access-reason (string-ascii 200)))
+  (let ((record (unwrap! (get-record record-id) err-record-not-found)))
+    (asserts! (can-emergency-access record-id tx-sender) err-not-authorized)
+    (map-set emergency-access-log
+      { record-id: record-id, emergency-contact: tx-sender, access-time: block-height }
+      {
+        record-owner: (get owner record),
+        access-reason: access-reason,
+        is-valid: true
+      }
+    )
+    (ok (get gaia-url record))
+  )
+)
+
+(define-public (toggle-emergency-access-system)
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+    (var-set emergency-access-enabled (not (var-get emergency-access-enabled)))
+    (ok (var-get emergency-access-enabled))
   )
 )
